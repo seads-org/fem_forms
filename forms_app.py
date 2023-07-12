@@ -117,7 +117,7 @@ def main():
             st.session_state.start_form = False
             st.session_state.transcriptor_name = ""
         n_audios = st.session_state.df.shape[0]
-        items_per_page = 10
+        items_per_page = 5
 
         form_titles = st.session_state.df['form_title'].unique().tolist()
         selected_form_title = st.selectbox('Select a form title:', form_titles)
