@@ -14,8 +14,15 @@ if working_in_st:
         aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
         region_name=st.secrets["AWS_REGION"]
     )
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+        region_name=st.secrets["AWS_REGION"]
+    )
 else:
     s3 = boto3.resource('s3')
+    s3_client = boto3.client('s3')
 
 bucket_name = 'fem-transcripts'
 previous_sessions_path = 'forms_transcriptors/previous_sessions/'
@@ -35,7 +42,6 @@ def save_json(data, filename):
 
 # Function to generate presigned url
 def generate_presigned_url(bucket_name, object_name, expiration=3600):
-    s3_client = boto3.client('s3')
     try:
         response = s3_client.generate_presigned_url('get_object',
                                                     Params={'Bucket': bucket_name, 'Key': object_name, 'ResponseContentType': 'audio/wav'},
