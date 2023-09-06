@@ -118,7 +118,8 @@ def main():
         if 'language' not in st.session_state or language != st.session_state.language:
             st.session_state.language = language
             st.session_state.df = load_data_from_s3(f's3://fem-transcripts/{language}_async_inference/mapping.csv')
-            st.session_state.df['form_title'] = st.session_state.df['doc_full_transcription_location'].apply(lambda x: os.path.splitext(os.path.basename(x))[0])
+            filtered_df = st.session_state.df.dropna(subset=['doc_full_transcription_location']) # Filter out the NaNs before applying the lambda function
+            st.session_state.df['form_title'] = filtered_df['doc_full_transcription_location'].apply(lambda x: os.path.splitext(os.path.basename(x))[0])
             st.session_state.df = st.session_state.df.dropna(subset=['sgm_input_location'])
             st.session_state.start_form = False
             st.session_state.transcriptor_name = ""
