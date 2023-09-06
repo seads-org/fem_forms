@@ -6,6 +6,7 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import NoCredentialsError
 
+#TODO! add password protection 
 working_in_st=True
 if working_in_st:
     s3 = boto3.resource(
@@ -111,11 +112,25 @@ def load_data_from_s3(s3_path):
 
 def main():
     st.set_page_config(layout='wide')
+
+    # Initialize session state variable for unrecoverable error
+    if 'unrecoverable_error' not in st.session_state:
+        st.session_state.unrecoverable_error = False
+
+    # Check for unrecoverable error
+    if st.session_state.unrecoverable_error:
+        st.error("An unrecoverable error has occurred. Please refresh the website to start again.")
+        return  # Stop further execution
+
     language = st.selectbox('Select a language:', ['','hausa', 'igbo', 'yoruba'])
 
     if language:
+        if 'language' in st.session_state and language != st.session_state.language:
+            st.error("It is not possible to change the language after starting a session. Please refresh the website and start again.")
+            st.session_state.unrecoverable_error = True  
+            return  # Stop further execution
         # if 'df' not in st.session_state:
-        if 'language' not in st.session_state or language != st.session_state.language:
+        if 'language' not in st.session_state:# or language != st.session_state.language:
             st.session_state.language = language
             st.session_state.df = load_data_from_s3(f's3://fem-transcripts/{language}_async_inference/mapping.csv')
             filtered_df = st.session_state.df.dropna(subset=['doc_full_transcription_location']) # Filter out the NaNs before applying the lambda function
@@ -154,7 +169,10 @@ def main():
                         previous_sessions_bucket = s3.Bucket(bucket_name)
                         previous_sessions = [obj.key.replace(previous_sessions_path,'') for obj in previous_sessions_bucket.objects.filter(Prefix=previous_sessions_path).all() if selected_form_title in obj.key and st.session_state.transcriptor_name in obj.key]
                         if not previous_sessions:
-                            st.write("No sessions found. Please refresh the page and start a New Session.")
+                            st.error("No sessions found. Please refresh the page and start a New Session.")
+                            st.session_state.unrecoverable_error = True  
+                            return  # Stop further execution
+
                         else:
                             selected_session = st.selectbox("Select a previous session:", previous_sessions)
 
